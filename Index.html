@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>મોબાઈલ સ્કેનર - સ્માર્ટ ક્લાસરૂમ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-aruco@0.1.0/src/cv.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-aruco@0.1.0/src/aruco.js"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col font-sans">
+
+  <!-- ઉપરનો કંટ્રોલ બાર -->
+  <div class="p-3 bg-slate-800 flex items-center justify-between shadow">
+    <span class="text-sm font-bold text-indigo-400">📱 સ્કેનર</span>
+    <span id="statusText" class="text-xs text-emerald-400 font-semibold">કનેક્ટ થાય છે...</span>
+    <button onclick="saveToSheet()" class="text-xs bg-amber-500 text-black font-bold px-3 py-1.5 rounded">💾 સેવ કરો</button>
+  </div>
+
+  <!-- પ્રશ્ન સિલેક્શન -->
+  <div class="p-3 bg-slate-800/80 border-b border-slate-700 space-y-2">
+    <div class="flex items-center justify-between gap-2">
+      <button onclick="changeQ(-1)" class="px-3 py-1.5 bg-slate-700 rounded font-bold">◀</button>
+      <div id="qTitle" class="text-sm font-semibold text-center flex-1 truncate">પ્રશ્ન લોડ થાય છે...</div>
+      <button onclick="changeQ(1)" class="px-3 py-1.5 bg-slate-700 rounded font-bold">▶</button>
+    </div>
+    <div class="flex gap-2">
+      <button id="toggleAnsBtn" onclick="toggleShowAnswer()" class="flex-1 py-2 bg-indigo-600 rounded-lg text-sm font-bold">
+        👁️ સ્માર્ટ બોર્ડ પર જવાબ બતાવો
+      </button>
+      <button onclick="clearCurrentAnswers()" class="px-3 py-2 bg-rose-600 rounded-lg text-sm font-bold">
+        🗑️ ક્લિયર
+      </button>
+    </div>
+  </div>
+
+  <!-- કેમેરા વ્યૂ -->
+  <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
+    <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
+    <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+    <canvas id="processCanvas" class="hidden"></canvas>
+    
+    <button id="startCamBtn" onclick="startCamera()" class="absolute px-6 py-3 bg-emerald-600 rounded-xl font-bold shadow-lg text-lg">
+      📷 કેમેરા ચાલુ કરો
+    </button>
+  </div>
+
+  <!-- નીચે સ્કેન થયેલા વિદ્યાર્થીઓની સંખ્યા -->
+  <div class="p-3 bg-slate-800 max-h-32 overflow-y-auto">
+    <div class="text-xs text-slate-400 mb-1">સ્કેન થયેલા જવાબો (<span id="scanCount">0</span>):</div>
+    <div id="scannedList" class="flex flex-wrap gap-1.5"></div>
+  </div>
+
+  <script>
+    // 👇 અહીં તમારી Google Apps Script ની /exec લિંક પેસ્ટ કરો
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbx-Qhvx3gsRG_obUdLimG3wEgZPOuYjWhKKslV1TetbhSmel1RWvv1M5OKL4CtOSdsy0A/exec";
+
+    let questions = [], students = {};
+    let activeQIndex = 0, showAnswer = false;
+    let scannedResponses = {}, pendingSync = {}, isSyncing = false;
+    let detector = new AR.Detector();
+    let video = document.getElementById('video');
+    let overlay = document.getElementById('overlay');
+    let pCanvas = document.getElementById('processCanvas');
+    let oCtx = overlay.getContext('2d');
+    let pCtx = pCanvas.getContext('2d');
+    let scanning = false;
+
+    // Google Apps Script માં ડેટા મોકલવા માટેનું ફંક્શન (CORS-free)
+    async function postToGAS(payload) {
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
+
+    // પ્રારંભિક ડેટા લોડ કરવો
+    async function loadInitialData() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getInitialData`);
+        const data = await res.json();
+        questions = data.questions || [];
+        (data.students || []).forEach(s => students[s.roll] = s.name);
+        activeQIndex = data.liveState.activeQIndex || 0;
+        showAnswer = data.liveState.showAnswer || false;
+        scannedResponses = data.liveState.responses || {};
+        updateUI();
+        document.getElementById('statusText').innerText = 'તૈયાર છે ✓';
+      } catch (err) {
+        document.getElementById('statusText').innerText = 'કનેક્શન એરર!';
+        alert('Google Sheet સાથે કનેક્ટ થઈ શક્યું નથી. GAS_URL ચેક કરો.');
+      }
+    }
+    loadInitialData();
+
+    function updateUI() {
+      if (questions.length > 0) {
+        const q = questions[activeQIndex];
+        document.getElementById('qTitle').innerText = `પ્ર.${q.qNo}: ${q.question}`;
+      }
+      const btn = document.getElementById('toggleAnsBtn');
+      btn.innerText = showAnswer ? '🙈 જવાબ છુપાવો' : '👁️ સ્માર્ટ બોર્ડ પર જવાબ બતાવો';
+      btn.className = showAnswer ? 'flex-1 py-2 bg-emerald-600 rounded-lg text-sm font-bold' : 'flex-1 py-2 bg-indigo-600 rounded-lg text-sm font-bold';
+      renderScannedList();
+    }
+
+    function renderScannedList() {
+      const keys = Object.keys(scannedResponses);
+      document.getElementById('scanCount').innerText = keys.length;
+      document.getElementById('scannedList').innerHTML = keys.map(roll => 
+        `<span class="px-2 py-0.5 bg-emerald-700 text-xs rounded font-bold">#${roll}: ${scannedResponses[roll]}</span>`
+      ).join('');
+    }
+
+    async function changeQ(dir) {
+      if (questions.length === 0) return;
+      activeQIndex = (activeQIndex + dir + questions.length) % questions.length;
+      showAnswer = false;
+      scannedResponses = {};
+      pendingSync = {};
+      updateUI();
+      document.getElementById('statusText').innerText = 'પ્રશ્ન બદલાય છે...';
+      await postToGAS({ action: 'setQuizControl', activeQIndex, showAnswer: false, clearResponses: true });
+      document.getElementById('statusText').innerText = 'બોર્ડ અપડેટ થયું ✓';
+    }
+
+    async function toggleShowAnswer() {
+      showAnswer = !showAnswer;
+      updateUI();
+      await postToGAS({ action: 'setQuizControl', activeQIndex, showAnswer, clearResponses: false });
+    }
+
+    async function clearCurrentAnswers() {
+      if (!confirm('ચાલુ પ્રશ્નના સ્કેન કરેલા જવાબો ભૂંસી નાખવા છે?')) return;
+      scannedResponses = {};
+      pendingSync = {};
+      updateUI();
+      await postToGAS({ action: 'setQuizControl', activeQIndex, showAnswer, clearResponses: true });
+    }
+
+    async function saveToSheet() {
+      document.getElementById('statusText').innerText = 'સેવ થાય છે...';
+      const res = await postToGAS({ action: 'saveResultsToSheet' });
+      alert(res.data ? res.data.message : 'સેવ થઈ ગયું!');
+      document.getElementById('statusText').innerText = 'સેવ થઈ ગયું ✓';
+    }
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        video.srcObject = stream;
+        document.getElementById('startCamBtn').style.display = 'none';
+        scanning = true;
+        requestAnimationFrame(tick);
+      } catch (err) {
+        alert('કેમેરા ચાલુ થઈ શક્યો નથી: ' + err.message);
+      }
+    }
+
+    function getAnswerFromCorners(corners) {
+      const dx = corners[1].x - corners[0].x;
+      const dy = corners[1].y - corners[0].y;
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      if (angle >= -45 && angle < 45) return 'A';
+      if (angle >= -135 && angle < -45) return 'B';
+      if (angle >= 45 && angle < 135) return 'D';
+      return 'C';
+    }
+
+    function tick() {
+      if (!scanning) return;
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        const scale = 640 / video.videoWidth;
+        const w = 640;
+        const h = Math.round(video.videoHeight * scale);
+        pCanvas.width = w; pCanvas.height = h;
+        overlay.width = w; overlay.height = h;
+
+        pCtx.drawImage(video, 0, 0, w, h);
+        const imageData = pCtx.getImageData(0, 0, w, h);
+        const markers = detector.detect(imageData);
+
+        oCtx.clearRect(0, 0, w, h);
+        markers.forEach(m => {
+          if (m.id < 1 || m.id > 200) return;
+          const ans = getAnswerFromCorners(m.corners);
+
+          oCtx.strokeStyle = '#10b981';
+          oCtx.lineWidth = 4;
+          oCtx.beginPath();
+          m.corners.forEach((c, idx) => idx === 0 ? oCtx.moveTo(c.x, c.y) : oCtx.lineTo(c.x, c.y));
+          oCtx.closePath();
+          oCtx.stroke();
+
+          oCtx.fillStyle = '#10b981';
+          oCtx.fillRect(m.corners[0].x, m.corners[0].y - 26, 75, 24);
+          oCtx.fillStyle = '#ffffff';
+          oCtx.font = 'bold 16px sans-serif';
+          oCtx.fillText(`#${m.id}: ${ans}`, m.corners[0].x + 5, m.corners[0].y - 8);
+
+          if (scannedResponses[m.id] !== ans) {
+            scannedResponses[m.id] = ans;
+            pendingSync[m.id] = ans;
+            renderScannedList();
+          }
+        });
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // દર 1.5 સેકન્ડે નવા જવાબો સર્વર પર મોકલવા
+    setInterval(async () => {
+      if (isSyncing || Object.keys(pendingSync).length === 0) return;
+      isSyncing = true;
+      const batch = { ...pendingSync };
+      pendingSync = {};
+      document.getElementById('statusText').innerText = 'સિંક થાય છે...';
+      try {
+        await postToGAS({ action: 'updateResponses', responses: batch });
+        document.getElementById('statusText').innerText = 'લાઇવ સિંક ✓';
+      } catch (e) {
+        document.getElementById('statusText').innerText = 'સિંક ફેલ!';
+      }
+      isSyncing = false;
+    }, 1500);
+  </script>
+</body>
+</html>
