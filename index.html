@@ -81,11 +81,11 @@
     let activeQIndex = 0, showAnswer = false, showLeaderboard = false;
     let scannedResponses = {}, pendingSync = {}, isSyncing = false;
 
-    let detector = new AR.Detector();
-    let video = document.getElementById('video');
+    let detector = null;
+    let video = null, overlay = null, pCanvas = null;
     let overlay = document.getElementById('overlay');
     let pCanvas = document.getElementById('processCanvas');
-    let oCtx = overlay.getContext('2d'), pCtx = pCanvas.getContext('2d');
+    let oCtx = null, pCtx = null;
     let scanning = false, audioCtx = null;
 
     function playBeepAndVibrate() {
@@ -237,10 +237,23 @@
     async function startCamera() {
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
       try {
+        video = document.getElementById('video');
+        overlay = document.getElementById('overlay');
+        pCanvas = document.getElementById('processCanvas');
+        oCtx = overlay.getContext('2d');
+        pCtx = pCanvas.getContext('2d');
+
+        if (typeof AR === 'undefined') {
+          alert('ArUco સ્કેનર લાઇબ્રેરી લોડ થઈ નથી. ઇન્ટરનેટ ચેક કરીને પેજ રિફ્રેશ કરો.');
+          return;
+        }
+        detector = new AR.Detector();
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
         });
         video.srcObject = stream;
+        await video.play();
         document.getElementById('startCamBtn').style.display = 'none';
         scanning = true;
         requestAnimationFrame(tick);
@@ -248,7 +261,6 @@
         alert('કેમેરા ચાલુ થઈ શક્યો નથી: ' + err.message);
       }
     }
-
     function getAnswerFromCorners(corners) {
       const dx = corners[1].x - corners[0].x, dy = corners[1].y - corners[0].y;
       const angle = Math.atan2(dy, dx) * 180 / Math.PI;
