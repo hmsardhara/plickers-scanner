@@ -15,7 +15,7 @@
     <div class="bg-slate-800 max-w-sm w-full rounded-2xl p-6 shadow-2xl border border-slate-700 space-y-4 text-center">
       <h1 class="text-2xl font-bold text-indigo-400">📱 શિક્ષક સ્કેનર લોગિન</h1>
       <p class="text-xs text-slate-400">માસ્ટર શીટ મુજબ UserCode અને Password નાખો</p>
-      <input id="uCode" type="text" placeholder="UserCode (દા.ત. SCH01)" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-white uppercase font-bold">
+      <input id="uCode" type="text" placeholder="UserCode (દા.ત. KUNJ)" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-white uppercase font-bold">
       <input id="uPass" type="password" placeholder="Password" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-white">
       <button id="loginBtn" onclick="doLogin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-bold text-lg">લોગિન કરો</button>
       <p id="loginErr" class="text-sm text-rose-400 font-semibold"></p>
@@ -75,16 +75,14 @@
     // 👇 અહીં તમારી Google Apps Script ની /exec લિંક પેસ્ટ કરો
     const GAS_URL = "https://script.google.com/macros/s/AKfycbx-Qhvx3gsRG_obUdLimG3wEgZPOuYjWhKKslV1TetbhSmel1RWvv1M5OKL4CtOSdsy0A/exec";
 
-    let session = null; // { userCode, schoolName, standards }
+    let session = null;
     let chapters = [], questions = [];
     let currentStd = '', currentFileId = '', currentCh = '', currentChTitle = '';
     let activeQIndex = 0, showAnswer = false, showLeaderboard = false;
     let scannedResponses = {}, pendingSync = {}, isSyncing = false;
 
     let detector = null;
-    let video = null, overlay = null, pCanvas = null;
-    let overlay = document.getElementById('overlay');
-    let pCanvas = document.getElementById('processCanvas');
+    let videoEl = null, overlayEl = null, pCanvasEl = null;
     let oCtx = null, pCtx = null;
     let scanning = false, audioCtx = null;
 
@@ -105,6 +103,7 @@
     async function postToGAS(payload) {
       const res = await fetch(GAS_URL, {
         method: 'POST',
+        redirect: 'follow',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
@@ -114,10 +113,14 @@
     async function doLogin() {
       const userCode = document.getElementById('uCode').value.trim();
       const password = document.getElementById('uPass').value.trim();
+      if (!userCode || !password) {
+        document.getElementById('loginErr').innerText = 'UserCode અને Password બંને નાખો.';
+        return;
+      }
       document.getElementById('loginBtn').innerText = 'ચેક થાય છે...';
       document.getElementById('loginErr').innerText = '';
       try {
-        const res = await fetch(`${GAS_URL}?action=login&userCode=${encodeURIComponent(userCode)}&password=${encodeURIComponent(password)}`);
+        const res = await fetch(`${GAS_URL}?action=login&userCode=${encodeURIComponent(userCode)}&password=${encodeURIComponent(password)}`, { redirect: 'follow' });
         const data = await res.json();
         document.getElementById('loginBtn').innerText = 'લોગિન કરો';
         if (!data.success) {
@@ -134,7 +137,7 @@
         onStdChange();
       } catch (e) {
         document.getElementById('loginBtn').innerText = 'લોગિન કરો';
-        document.getElementById('loginErr').innerText = 'સર્વર કનેક્શન એરર! GAS_URL ચેક કરો.';
+        document.getElementById('loginErr').innerText = 'એરર: ' + e.message;
       }
     }
 
@@ -145,7 +148,7 @@
       currentFileId = sel.value;
       currentStd = sel.options[sel.selectedIndex].dataset.std;
       document.getElementById('statusText').innerText = 'પ્રકરણ લોડ થાય છે...';
-      const res = await fetch(`${GAS_URL}?action=getChapters&fileId=${encodeURIComponent(currentFileId)}`);
+      const res = await fetch(`${GAS_URL}?action=getChapters&fileId=${encodeURIComponent(currentFileId)}`, { redirect: 'follow' });
       const data = await res.json();
       chapters = data.chapters || [];
       document.getElementById('chSelect').innerHTML = chapters.map(c =>
@@ -159,7 +162,7 @@
       currentCh = sel.value;
       currentChTitle = sel.options[sel.selectedIndex].text;
       document.getElementById('statusText').innerText = 'પ્રશ્નો લોડ થાય છે...';
-      const res = await fetch(`${GAS_URL}?action=getChapterData&fileId=${encodeURIComponent(currentFileId)}&ch=${encodeURIComponent(currentCh)}`);
+      const res = await fetch(`${GAS_URL}?action=getChapterData&fileId=${encodeURIComponent(currentFileId)}&ch=${encodeURIComponent(currentCh)}`, { redirect: 'follow' });
       const data = await res.json();
       questions = data.questions || [];
       activeQIndex = 0; showAnswer = false; showLeaderboard = false;
@@ -237,14 +240,14 @@
     async function startCamera() {
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
       try {
-        video = document.getElementById('video');
-        overlay = document.getElementById('overlay');
-        pCanvas = document.getElementById('processCanvas');
-        oCtx = overlay.getContext('2d');
-        pCtx = pCanvas.getContext('2d');
+        videoEl = document.getElementById('video');
+        overlayEl = document.getElementById('overlay');
+        pCanvasEl = document.getElementById('processCanvas');
+        oCtx = overlayEl.getContext('2d');
+        pCtx = pCanvasEl.getContext('2d');
 
         if (typeof AR === 'undefined') {
-          alert('ArUco સ્કેનર લાઇબ્રેરી લોડ થઈ નથી. ઇન્ટરનેટ ચેક કરીને પેજ રિફ્રેશ કરો.');
+          alert('ArUco લાઇબ્રેરી લોડ થઈ નથી. પેજ રિફ્રેશ કરીને ફરી ટ્રાય કરો.');
           return;
         }
         detector = new AR.Detector();
@@ -252,8 +255,8 @@
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
         });
-        video.srcObject = stream;
-        await video.play();
+        videoEl.srcObject = stream;
+        await videoEl.play();
         document.getElementById('startCamBtn').style.display = 'none';
         scanning = true;
         requestAnimationFrame(tick);
@@ -261,6 +264,7 @@
         alert('કેમેરા ચાલુ થઈ શક્યો નથી: ' + err.message);
       }
     }
+
     function getAnswerFromCorners(corners) {
       const dx = corners[1].x - corners[0].x, dy = corners[1].y - corners[0].y;
       const angle = Math.atan2(dy, dx) * 180 / Math.PI;
@@ -272,11 +276,11 @@
 
     function tick() {
       if (!scanning) return;
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        const scale = 640 / video.videoWidth;
-        const w = 640, h = Math.round(video.videoHeight * scale);
-        pCanvas.width = w; pCanvas.height = h; overlay.width = w; overlay.height = h;
-        pCtx.drawImage(video, 0, 0, w, h);
+      if (videoEl && videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+        const scale = 640 / videoEl.videoWidth;
+        const w = 640, h = Math.round(videoEl.videoHeight * scale);
+        pCanvasEl.width = w; pCanvasEl.height = h; overlayEl.width = w; overlayEl.height = h;
+        pCtx.drawImage(videoEl, 0, 0, w, h);
         const markers = detector.detect(pCtx.getImageData(0, 0, w, h));
 
         oCtx.clearRect(0, 0, w, h);
