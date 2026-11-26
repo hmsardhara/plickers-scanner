@@ -79,8 +79,8 @@
 
     <!-- કેમેરા વ્યૂ -->
     <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
-      <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
-      <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+      <video id="video" autoplay playsinline class="w-full h-full object-contain"></video>
+      <canvas id="overlay" class="absolute inset-0 w-full h-full object-contain pointer-events-none"></canvas>
       <canvas id="processCanvas" class="hidden"></canvas>
 
       <!-- બધા સ્કેન પૂર્ણ થયાનો બેનર -->
@@ -322,9 +322,33 @@
       }
     }
 
+    // મોબાઈલ ઉભો છે કે આડો તે સેન્સરથી આપમેળે ઓળખવા માટે
+    let tiltOffset = 0;
+    window.addEventListener('devicemotion', (e) => {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc || acc.x === null || acc.y === null) return;
+      const screenAngle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+
+      // જો Auto-Rotate બંધ હોય (screenAngle === 0) અને ફોન આડો પકડ્યો હોય
+      if (screenAngle === 0) {
+        if (acc.x > 6 && Math.abs(acc.y) < 4) tiltOffset = -90;       // ફોન ડાબી બાજુ આડો
+        else if (acc.x < -6 && Math.abs(acc.y) < 4) tiltOffset = 90; // ફોન જમણી બાજુ આડો
+        else if (Math.abs(acc.x) < 4) tiltOffset = 0;                // ફોન સીધો ઉભો
+      } else {
+        // Auto-Rotate ચાલુ હોય ત્યારે બ્રાઉઝર જાતે જ ફ્રેમ સીધી કરી દે છે
+        tiltOffset = 0;
+      }
+    });
+
     function getAnswerFromCorners(corners) {
-      const dx = corners[1].x - corners[0].x, dy = corners[1].y - corners[0].y;
-      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      const dx = corners[1].x - corners[0].x;
+      const dy = corners[1].y - corners[0].y;
+      let angle = (Math.atan2(dy, dx) * 180 / Math.PI) + tiltOffset;
+
+      // એંગલને -180 થી 180 ની રેન્જમાં રાખવો
+      while (angle > 180) angle -= 360;
+      while (angle < -180) angle += 360;
+
       if (angle >= -45 && angle < 45) return 'A';
       if (angle >= -135 && angle < -45) return 'B';
       if (angle >= 45 && angle < 135) return 'D';
