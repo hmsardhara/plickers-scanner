@@ -3,56 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>મોબાઈલ સ્કેનર - સ્માર્ટ ક્લાસરૂમ</title>
+  <title>સ્માર્ટ સ્કેનર - શિક્ષક કંટ્રોલ</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/gh/jcmellado/js-aruco@master/src/cv.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/jcmellado/js-aruco@master/src/aruco.js"></script>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col font-sans">
+<body class="bg-slate-950 text-white h-screen flex flex-col font-sans overflow-hidden">
 
-  <!-- લોગિન સ્ક્રીન -->
-  <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-5">
-    <div class="bg-slate-800 max-w-sm w-full rounded-2xl p-6 shadow-2xl border border-slate-700 space-y-4 text-center">
-      <h1 class="text-2xl font-bold text-indigo-400">📱 શિક્ષક સ્કેનર લોગિન</h1>
-      <p class="text-xs text-slate-400">માસ્ટર શીટ મુજબ UserCode અને Password નાખો</p>
-      <input id="uCode" type="text" placeholder="UserCode (દા.ત. KUNJ)" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-white uppercase font-bold">
-      <input id="uPass" type="password" placeholder="Password" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-white">
-      <button id="loginBtn" onclick="doLogin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-bold text-lg">લોગિન કરો</button>
+  <!-- પ્રોફેશનલ લોગિન સ્ક્રીન -->
+  <div id="loginScreen" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-5">
+    <div class="bg-slate-900 max-w-sm w-full rounded-2xl p-7 shadow-2xl border border-slate-800 space-y-4 text-center">
+      <div class="w-14 h-14 bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">📱</div>
+      <div>
+        <h1 class="text-2xl font-bold text-white">શિક્ષક સ્કેનર લોગિન</h1>
+        <p class="text-xs text-slate-400 mt-1">માસ્ટર શીટ મુજબ UserCode અને Password નાખો</p>
+      </div>
+      <input id="uCode" type="text" placeholder="UserCode (દા.ત. KUNJ)" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white uppercase font-bold text-center focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <input id="uPass" type="password" placeholder="Password" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white text-center focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <button id="loginBtn" onclick="doLogin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-lg shadow-lg transition">લોગિન કરો</button>
       <p id="loginErr" class="text-sm text-rose-400 font-semibold"></p>
     </div>
   </div>
 
-  <!-- મુખ્ય એપ (લોગિન પછી) -->
-  <div id="mainApp" class="hidden flex-1 flex flex-col">
+  <!-- મુખ્ય સ્કેનર એપ -->
+  <div id="mainApp" class="hidden flex-1 flex flex-col min-h-0">
     <!-- ટોપ બાર -->
-    <div class="p-2 bg-slate-800 flex items-center justify-between gap-2 shadow border-b border-slate-700">
+    <div class="px-3 py-2 bg-slate-900 flex items-center justify-between gap-2 border-b border-slate-800">
       <div class="truncate">
         <div id="schoolNameDisp" class="text-xs font-bold text-amber-400 truncate"></div>
-        <div id="statusText" class="text-[11px] text-emerald-400">તૈયાર છે ✓</div>
+        <div id="statusText" class="text-[11px] text-emerald-400 font-medium">તૈયાર છે ✓</div>
       </div>
-      <div class="flex gap-1.5">
-        <button onclick="saveChapterScores()" class="text-xs bg-emerald-600 text-white font-bold px-2.5 py-1.5 rounded-lg">💾 સ્કોર સેવ</button>
-        <button onclick="logout()" class="text-xs bg-slate-700 text-slate-300 px-2 py-1.5 rounded-lg">🚪</button>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button onclick="saveChapterScores()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg shadow">💾 સેવ</button>
+        <button onclick="logout()" class="text-xs bg-slate-800 border border-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg">🚪</button>
       </div>
     </div>
 
-    <!-- ધોરણ અને પ્રકરણ સિલેક્શન -->
-    <div class="p-2 bg-slate-800/90 grid grid-cols-2 gap-2 border-b border-slate-700">
-      <select id="stdSelect" onchange="onStdChange()" class="bg-amber-500 text-black font-bold text-xs px-2 py-2 rounded-lg"></select>
-      <select id="chSelect" onchange="onChapterChange()" class="bg-slate-700 text-white font-bold text-xs px-2 py-2 rounded-lg"></select>
+    <!-- ધોરણ અને પ્રકરણ -->
+    <div class="px-3 py-2 bg-slate-900/80 grid grid-cols-12 gap-2 border-b border-slate-800">
+      <select id="stdSelect" onchange="onStdChange()" class="col-span-4 bg-amber-500 text-slate-950 font-black text-xs px-2 py-2 rounded-lg"></select>
+      <select id="chSelect" onchange="onChapterChange()" class="col-span-8 bg-slate-800 border border-slate-700 text-white font-semibold text-xs px-2 py-2 rounded-lg"></select>
     </div>
 
     <!-- પ્રશ્ન અને કંટ્રોલ -->
-    <div class="p-2 bg-slate-800/70 border-b border-slate-700 space-y-2">
+    <div class="px-3 py-2 bg-slate-900/60 border-b border-slate-800 space-y-2">
       <div class="flex items-center justify-between gap-2">
-        <button onclick="changeQ(-1)" class="px-3 py-1 bg-slate-700 rounded font-bold">◀</button>
-        <div id="qTitle" class="text-xs font-semibold text-center flex-1 truncate">પ્રશ્ન લોડ થાય છે...</div>
-        <button onclick="changeQ(1)" class="px-3 py-1 bg-slate-700 rounded font-bold">▶</button>
+        <button onclick="changeQ(-1)" class="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg font-bold">◀</button>
+        <div id="qTitle" class="text-xs font-semibold text-center flex-1 truncate text-slate-100">પ્રશ્ન લોડ થાય છે...</div>
+        <button onclick="changeQ(1)" class="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg font-bold">▶</button>
       </div>
-      <div class="grid grid-cols-3 gap-1.5">
+      <div class="grid grid-cols-3 gap-2">
         <button id="toggleAnsBtn" onclick="toggleShowAnswer()" class="py-1.5 bg-indigo-600 rounded-lg text-xs font-bold">👁️ જવાબ</button>
         <button id="toggleLbBtn" onclick="toggleLeaderboard()" class="py-1.5 bg-amber-600 rounded-lg text-xs font-bold">🏆 લીડરબોર્ડ</button>
-        <button onclick="clearCurrentAnswers()" class="py-1.5 bg-rose-600 rounded-lg text-xs font-bold">🗑️ ક્લિયર</button>
+        <button onclick="clearCurrentAnswers()" class="py-1.5 bg-rose-600/90 rounded-lg text-xs font-bold">🗑️ ક્લિયર</button>
       </div>
     </div>
 
@@ -61,49 +64,78 @@
       <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
       <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
       <canvas id="processCanvas" class="hidden"></canvas>
-      <button id="startCamBtn" onclick="startCamera()" class="absolute px-6 py-3 bg-emerald-600 rounded-xl font-bold shadow-lg text-lg">📷 કેમેરા ચાલુ કરો</button>
+
+      <!-- બધા સ્કેન પૂર્ણ થયાનો બેનર -->
+      <div id="allDoneToast" class="hidden absolute top-3 bg-emerald-500 text-slate-950 font-black text-xs px-4 py-1.5 rounded-full shadow-lg animate-bounce">
+        🎉 બધા વિદ્યાર્થીઓ સ્કેન થઈ ગયા!
+      </div>
+
+      <button id="startCamBtn" onclick="startCamera()" class="absolute px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-bold shadow-xl text-base">
+        📷 કેમેરા ચાલુ કરો
+      </button>
     </div>
 
-    <!-- સ્કેન લિસ્ટ -->
-    <div class="p-2 bg-slate-800 max-h-24 overflow-y-auto">
-      <div class="text-[11px] text-slate-400 mb-1">સ્કેન થયેલા (<span id="scanCount">0</span>):</div>
+    <!-- સ્કેન સ્ટેટસ -->
+    <div class="p-2.5 bg-slate-900 border-t border-slate-800 max-h-28 overflow-y-auto">
+      <div class="flex justify-between items-center text-xs text-slate-400 mb-1.5">
+        <span>સ્કેન પ્રગતિ: <b class="text-emerald-400"><span id="scanCount">0</span> / <span id="totalStdCount">0</span></b></span>
+        <span id="remainText" class="text-[11px] text-amber-400"></span>
+      </div>
       <div id="scannedList" class="flex flex-wrap gap-1"></div>
     </div>
   </div>
 
   <script>
     // 👇 અહીં તમારી Google Apps Script ની /exec લિંક પેસ્ટ કરો
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx-Qhvx3gsRG_obUdLimG3wEgZPOuYjWhKKslV1TetbhSmel1RWvv1M5OKL4CtOSdsy0A/exec";
+    const GAS_URL = "https://script.google.com/macros/s/તમારી_લિંક_અહીં_મૂકો/exec";
 
-    let session = null;
-    let chapters = [], questions = [];
+    let session = null, chapters = [], questions = [], totalStudents = 0;
     let currentStd = '', currentFileId = '', currentCh = '', currentChTitle = '';
     let activeQIndex = 0, showAnswer = false, showLeaderboard = false;
     let scannedResponses = {}, pendingSync = {}, isSyncing = false;
+    let allScannedNotified = false;
 
-    let detector = null;
-    let videoEl = null, overlayEl = null, pCanvasEl = null;
-    let oCtx = null, pCtx = null;
-    let scanning = false, audioCtx = null;
+    let detector = null, videoEl = null, overlayEl = null, pCanvasEl = null;
+    let oCtx = null, pCtx = null, scanning = false, audioCtx = null;
 
+    // સામાન્ય સ્કેન બીપ
     function playBeepAndVibrate() {
-      if (navigator.vibrate) navigator.vibrate(80);
+      if (navigator.vibrate) navigator.vibrate(60);
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
         osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
         osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+      } catch (e) {}
+    }
+
+    // બધા વિદ્યાર્થીઓ સ્કેન થઈ જાય ત્યારે ખાસ 3-ટોન કમ્પ્લીશન બીપ
+    function playAllScannedChime() {
+      if (navigator.vibrate) navigator.vibrate([120, 60, 120, 60, 200]);
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+          const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+          const t = audioCtx.currentTime + i * 0.11;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.22, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(t); osc.stop(t + 0.2);
+        });
       } catch (e) {}
     }
 
     async function postToGAS(payload) {
       const res = await fetch(GAS_URL, {
-        method: 'POST',
-        redirect: 'follow',
+        method: 'POST', redirect: 'follow',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
@@ -113,22 +145,16 @@
     async function doLogin() {
       const userCode = document.getElementById('uCode').value.trim();
       const password = document.getElementById('uPass').value.trim();
-      if (!userCode || !password) {
-        document.getElementById('loginErr').innerText = 'UserCode અને Password બંને નાખો.';
-        return;
-      }
+      if (!userCode || !password) { document.getElementById('loginErr').innerText = 'UserCode અને Password બંને નાખો.'; return; }
       document.getElementById('loginBtn').innerText = 'ચેક થાય છે...';
       document.getElementById('loginErr').innerText = '';
       try {
         const res = await fetch(`${GAS_URL}?action=login&userCode=${encodeURIComponent(userCode)}&password=${encodeURIComponent(password)}`, { redirect: 'follow' });
         const data = await res.json();
         document.getElementById('loginBtn').innerText = 'લોગિન કરો';
-        if (!data.success) {
-          document.getElementById('loginErr').innerText = data.message;
-          return;
-        }
+        if (!data.success) { document.getElementById('loginErr').innerText = data.message; return; }
         session = data;
-        document.getElementById('schoolNameDisp').innerText = `${data.schoolName} (વેલિડ: ${data.validUntil || '∞'})`;
+        document.getElementById('schoolNameDisp').innerText = `${data.schoolName} | વેલિડ: ${data.validUntil || '∞'}`;
         document.getElementById('stdSelect').innerHTML = data.standards.map(s =>
           `<option value="${s.fileId}" data-std="${s.std}">ધોરણ ${s.std}</option>`
         ).join('');
@@ -165,8 +191,10 @@
       const res = await fetch(`${GAS_URL}?action=getChapterData&fileId=${encodeURIComponent(currentFileId)}&ch=${encodeURIComponent(currentCh)}`, { redirect: 'follow' });
       const data = await res.json();
       questions = data.questions || [];
+      totalStudents = (data.students || []).length;
+      document.getElementById('totalStdCount').innerText = totalStudents;
       activeQIndex = 0; showAnswer = false; showLeaderboard = false;
-      scannedResponses = {}; pendingSync = {};
+      scannedResponses = {}; pendingSync = {}; allScannedNotified = false;
       updateUI();
       await postToGAS({
         action: 'setQuizControl', userCode: session.userCode, schoolName: session.schoolName,
@@ -196,16 +224,30 @@
 
     function renderScannedList() {
       const keys = Object.keys(scannedResponses);
-      document.getElementById('scanCount').innerText = keys.length;
+      const count = keys.length;
+      document.getElementById('scanCount').innerText = count;
+
+      const remain = Math.max(0, totalStudents - count);
+      document.getElementById('remainText').innerText = totalStudents > 0
+        ? (remain === 0 ? '✓ બધા પૂર્ણ' : `બાકી: ${remain}`)
+        : '';
+
+      const toast = document.getElementById('allDoneToast');
+      if (totalStudents > 0 && count >= totalStudents) {
+        toast.classList.remove('hidden');
+      } else {
+        toast.classList.add('hidden');
+      }
+
       document.getElementById('scannedList').innerHTML = keys.map(roll =>
-        `<span class="px-2 py-0.5 bg-emerald-700 text-xs rounded font-bold">#${roll}: ${scannedResponses[roll]}</span>`
+        `<span class="px-2 py-0.5 bg-emerald-700/90 border border-emerald-500/40 text-xs rounded font-bold">#${roll}: ${scannedResponses[roll]}</span>`
       ).join('');
     }
 
     async function changeQ(dir) {
       if (questions.length === 0) return;
       activeQIndex = (activeQIndex + dir + questions.length) % questions.length;
-      showAnswer = false; showLeaderboard = false; pendingSync = {};
+      showAnswer = false; showLeaderboard = false; pendingSync = {}; allScannedNotified = false;
       const res = await postToGAS({
         action: 'setQuizControl', userCode: session.userCode, activeQIndex,
         showAnswer: false, showLeaderboard: false, clearResponses: false
@@ -226,7 +268,7 @@
 
     async function clearCurrentAnswers() {
       if (!confirm('ચાલુ પ્રશ્નના જવાબો ભૂંસી નાખવા છે?')) return;
-      scannedResponses = {}; pendingSync = {}; updateUI();
+      scannedResponses = {}; pendingSync = {}; allScannedNotified = false; updateUI();
       await postToGAS({ action: 'setQuizControl', userCode: session.userCode, activeQIndex, showAnswer, showLeaderboard, clearResponses: true });
     }
 
@@ -246,10 +288,7 @@
         oCtx = overlayEl.getContext('2d');
         pCtx = pCanvasEl.getContext('2d');
 
-        if (typeof AR === 'undefined') {
-          alert('ArUco લાઇબ્રેરી લોડ થઈ નથી. પેજ રિફ્રેશ કરીને ફરી ટ્રાય કરો.');
-          return;
-        }
+        if (typeof AR === 'undefined') { alert('ArUco લાઇબ્રેરી લોડ થઈ નથી. પેજ રિફ્રેશ કરો.'); return; }
         detector = new AR.Detector();
 
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -299,8 +338,15 @@
           if (scannedResponses[m.id] !== ans) {
             scannedResponses[m.id] = ans;
             pendingSync[m.id] = ans;
-            playBeepAndVibrate();
             renderScannedList();
+
+            // જો બધા વિદ્યાર્થીઓ સ્કેન થઈ ગયા હોય તો ખાસ કમ્પ્લીશન બીપ વગાડવો
+            if (totalStudents > 0 && Object.keys(scannedResponses).length >= totalStudents && !allScannedNotified) {
+              allScannedNotified = true;
+              playAllScannedChime();
+            } else {
+              playBeepAndVibrate();
+            }
           }
         });
       }
