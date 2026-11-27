@@ -5,30 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>સ્માર્ટ સ્કેનર - શિક્ષક કંટ્રોલ</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/gh/jcmellado/js-aruco@master/src/cv.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/jcmellado/js-aruco@master/src/aruco.js"></script>
-  <!-- ગુજરાતી Google Fonts: Baloo Bhai 2, Mukta Vaani, Hind Vadodara, Anek Gujarati -->
+
+  <!-- ગુજરાતી Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anek+Gujarati:wght@500;600;700&family=Baloo+Bhai+2:wght@600;700;800&family=Hind+Vadodara:wght@400;500;600;700&family=Mukta+Vaani:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* મુખ્ય લખાણ અને પ્રશ્નો માટે Mukta Vaani */
-    body {
-      font-family: 'Mukta Vaani', 'Hind Vadodara', sans-serif !important;
-    }
-    /* મોટા હેડિંગ્સ અને ટાઇટલ માટે Baloo Bhai 2 */
-    h1, h2, h3, .font-black {
-      font-family: 'Baloo Bhai 2', sans-serif !important;
-    }
-    /* બટનો, વિકલ્પો અને બેજ માટે Anek Gujarati / Hind Vadodara */
-    button, select, input, .font-bold {
-      font-family: 'Anek Gujarati', 'Hind Vadodara', sans-serif !important;
-    }
+    body { font-family: 'Mukta Vaani', 'Hind Vadodara', sans-serif !important; }
+    h1, h2, h3, .font-black { font-family: 'Baloo Bhai 2', sans-serif !important; }
+    button, select, input, .font-bold { font-family: 'Anek Gujarati', 'Hind Vadodara', sans-serif !important; }
   </style>
-</head>
-<body class="bg-slate-950 text-white h-screen flex flex-col font-sans overflow-hidden">
 
-  <!-- પ્રોફેશનલ લોગિન સ્ક્રીન -->
+  <!-- js-aruco લાઇબ્રેરી -->
+  <script src="https://cdn.jsdelivr.net/gh/jcmellado/js-aruco@master/src/cv.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/jcmellado/js-aruco@master/src/aruco.js"></script>
+</head>
+<body class="bg-slate-950 text-white h-screen flex flex-col overflow-hidden">
+
+  <!-- ૧. લોગિન સ્ક્રીન -->
   <div id="loginScreen" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-5">
     <div class="bg-slate-900 max-w-sm w-full rounded-2xl p-7 shadow-2xl border border-slate-800 space-y-4 text-center">
       <div class="w-14 h-14 bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">📱</div>
@@ -39,11 +33,11 @@
       <input id="uCode" type="text" placeholder="UserCode (દા.ત. KUNJ)" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white uppercase font-bold text-center focus:outline-none focus:ring-2 focus:ring-indigo-500">
       <input id="uPass" type="password" placeholder="Password" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white text-center focus:outline-none focus:ring-2 focus:ring-indigo-500">
       <button id="loginBtn" onclick="doLogin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-lg shadow-lg transition">લોગિન કરો</button>
-      <p id="loginErr" class="text-sm text-rose-400 font-semibold"></p>
+      <p id="loginErr" class="text-sm text-rose-400 font-semibold min-h-[20px]"></p>
     </div>
   </div>
 
-  <!-- મુખ્ય સ્કેનર એપ -->
+  <!-- ૨. મુખ્ય સ્કેનર એપ -->
   <div id="mainApp" class="hidden flex-1 flex flex-col min-h-0">
     <!-- ટોપ બાર -->
     <div class="px-3 py-2 bg-slate-900 flex items-center justify-between gap-2 border-b border-slate-800">
@@ -63,7 +57,7 @@
       <select id="chSelect" onchange="onChapterChange()" class="col-span-8 bg-slate-800 border border-slate-700 text-white font-semibold text-xs px-2 py-2 rounded-lg"></select>
     </div>
 
-    <!-- પ્રશ્ન અને કંટ્રોલ -->
+    <!-- પ્રશ્ન ક્રમ અને કંટ્રોલ -->
     <div class="px-3 py-2 bg-slate-900/60 border-b border-slate-800 space-y-2">
       <div class="flex items-center justify-between gap-2">
         <button onclick="changeQ(-1)" class="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg font-bold">◀</button>
@@ -77,7 +71,7 @@
       </div>
     </div>
 
-    <!-- કેમેરા વ્યૂ -->
+    <!-- કેમેરા વ્યૂ (ઉભા અને આડા બંને મોબાઈલ માટે object-contain) -->
     <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
       <video id="video" autoplay playsinline class="w-full h-full object-contain"></video>
       <canvas id="overlay" class="absolute inset-0 w-full h-full object-contain pointer-events-none"></canvas>
@@ -93,11 +87,11 @@
       </button>
     </div>
 
-    <!-- સ્કેન સ્ટેટસ -->
+    <!-- સ્કેન પ્રગતિ અને બાકી સંખ્યા -->
     <div class="p-2.5 bg-slate-900 border-t border-slate-800 max-h-28 overflow-y-auto">
       <div class="flex justify-between items-center text-xs text-slate-400 mb-1.5">
         <span>સ્કેન પ્રગતિ: <b class="text-emerald-400"><span id="scanCount">0</span> / <span id="totalStdCount">0</span></b></span>
-        <span id="remainText" class="text-[11px] text-amber-400"></span>
+        <span id="remainText" class="text-xs font-bold text-amber-400"></span>
       </div>
       <div id="scannedList" class="flex flex-wrap gap-1"></div>
     </div>
@@ -116,37 +110,58 @@
     let detector = null, videoEl = null, overlayEl = null, pCanvasEl = null;
     let oCtx = null, pCtx = null, scanning = false, audioCtx = null;
 
-    // સામાન્ય સ્કેન બીપ
-    function playBeepAndVibrate() {
-      if (navigator.vibrate) navigator.vibrate(60);
+    // મોબાઈલ ઉભો છે કે આડો તે સેન્સરથી આપમેળે ઓળખવા માટે
+    let tiltOffset = 0;
+    window.addEventListener('devicemotion', (e) => {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc || acc.x === null || acc.y === null) return;
+      const screenAngle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+      if (screenAngle === 0) {
+        if (acc.x > 6 && Math.abs(acc.y) < 4) tiltOffset = -90;
+        else if (acc.x < -6 && Math.abs(acc.y) < 4) tiltOffset = 90;
+        else if (Math.abs(acc.x) < 4) tiltOffset = 0;
+      } else {
+        tiltOffset = 0;
+      }
+    });
+
+    function ensureAudio() {
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (e) {}
+    }
+
+    // સામાન્ય સ્કેન બીપ
+    function playBeepAndVibrate() {
+      if (navigator.vibrate) navigator.vibrate(60);
+      ensureAudio();
+      try {
         const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
       } catch (e) {}
     }
 
-    // બધા વિદ્યાર્થીઓ સ્કેન થઈ જાય ત્યારે ખાસ 3-ટોન કમ્પ્લીશન બીપ
+    // બધા વિદ્યાર્થીઓ સ્કેન થઈ જાય ત્યારે ખાસ 4-નોટ કમ્પ્લીશન બીપ + વાઇબ્રેશન
     function playAllScannedChime() {
-      if (navigator.vibrate) navigator.vibrate([120, 60, 120, 60, 200]);
+      if (navigator.vibrate) navigator.vibrate([120, 60, 120, 60, 220]);
+      ensureAudio();
       try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, i) => {
           const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
           const t = audioCtx.currentTime + i * 0.11;
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(freq, t);
-          gain.gain.setValueAtTime(0.22, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
           osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(t); osc.stop(t + 0.2);
+          osc.start(t); osc.stop(t + 0.22);
         });
       } catch (e) {}
     }
@@ -163,14 +178,20 @@
     async function doLogin() {
       const userCode = document.getElementById('uCode').value.trim();
       const password = document.getElementById('uPass').value.trim();
-      if (!userCode || !password) { document.getElementById('loginErr').innerText = 'UserCode અને Password બંને નાખો.'; return; }
-      document.getElementById('loginBtn').innerText = 'ચેક થાય છે...';
+      if (!userCode || !password) {
+        document.getElementById('loginErr').innerText = 'UserCode અને Password બંને નાખો.';
+        return;
+      }
+      document.getElementById('loginBtn').innerText = 'વેરિફાય થાય છે...';
       document.getElementById('loginErr').innerText = '';
       try {
         const res = await fetch(`${GAS_URL}?action=login&userCode=${encodeURIComponent(userCode)}&password=${encodeURIComponent(password)}`, { redirect: 'follow' });
         const data = await res.json();
         document.getElementById('loginBtn').innerText = 'લોગિન કરો';
-        if (!data.success) { document.getElementById('loginErr').innerText = data.message; return; }
+        if (!data.success) {
+          document.getElementById('loginErr').innerText = data.message;
+          return;
+        }
         session = data;
         document.getElementById('schoolNameDisp').innerText = `${data.schoolName} | વેલિડ: ${data.validUntil || '∞'}`;
         document.getElementById('stdSelect').innerHTML = data.standards.map(s =>
@@ -215,9 +236,14 @@
       scannedResponses = {}; pendingSync = {}; allScannedNotified = false;
       updateUI();
       await postToGAS({
-        action: 'setQuizControl', userCode: session.userCode, schoolName: session.schoolName,
-        fileId: currentFileId, selectedStd: currentStd, selectedChapter: currentCh,
-        chapterTitle: currentChTitle, resetSession: true
+        action: 'setQuizControl',
+        sessionKey: session.sessionKey || session.userCode,
+        schoolName: session.schoolName,
+        fileId: currentFileId,
+        selectedStd: currentStd,
+        selectedChapter: currentCh,
+        chapterTitle: currentChTitle,
+        resetSession: true
       });
       document.getElementById('statusText').innerText = 'બોર્ડ અપડેટ થયું ✓';
     }
@@ -225,10 +251,11 @@
     function updateUI() {
       if (questions.length > 0) {
         const q = questions[activeQIndex] || questions[0];
-        document.getElementById('qTitle').innerText = `પ્ર.${q.qNo}: ${q.question}`;
+        document.getElementById('qTitle').innerText = `પ્ર.${activeQIndex + 1}/${questions.length}: ${q.question}`;
       } else {
         document.getElementById('qTitle').innerText = 'આ પ્રકરણમાં પ્રશ્ન નથી';
       }
+
       const aBtn = document.getElementById('toggleAnsBtn');
       aBtn.innerText = showAnswer ? '🙈 છુપાવો' : '👁️ જવાબ';
       aBtn.className = showAnswer ? 'py-1.5 bg-emerald-600 rounded-lg text-xs font-bold' : 'py-1.5 bg-indigo-600 rounded-lg text-xs font-bold';
@@ -251,11 +278,8 @@
         : '';
 
       const toast = document.getElementById('allDoneToast');
-      if (totalStudents > 0 && count >= totalStudents) {
-        toast.classList.remove('hidden');
-      } else {
-        toast.classList.add('hidden');
-      }
+      if (totalStudents > 0 && count >= totalStudents) toast.classList.remove('hidden');
+      else toast.classList.add('hidden');
 
       document.getElementById('scannedList').innerHTML = keys.map(roll =>
         `<span class="px-2 py-0.5 bg-emerald-700/90 border border-emerald-500/40 text-xs rounded font-bold">#${roll}: ${scannedResponses[roll]}</span>`
@@ -267,8 +291,9 @@
       activeQIndex = (activeQIndex + dir + questions.length) % questions.length;
       showAnswer = false; showLeaderboard = false; pendingSync = {}; allScannedNotified = false;
       const res = await postToGAS({
-        action: 'setQuizControl', userCode: session.userCode, activeQIndex,
-        showAnswer: false, showLeaderboard: false, clearResponses: false
+        action: 'setQuizControl',
+        sessionKey: session.sessionKey || session.userCode,
+        activeQIndex, showAnswer: false, showLeaderboard: false, clearResponses: false
       });
       scannedResponses = (res.data && res.data.responses) ? res.data.responses : {};
       updateUI();
@@ -276,29 +301,47 @@
 
     async function toggleShowAnswer() {
       showAnswer = !showAnswer; showLeaderboard = false; updateUI();
-      await postToGAS({ action: 'setQuizControl', userCode: session.userCode, activeQIndex, showAnswer, showLeaderboard: false });
+      await postToGAS({
+        action: 'setQuizControl',
+        sessionKey: session.sessionKey || session.userCode,
+        activeQIndex, showAnswer, showLeaderboard: false
+      });
     }
 
     async function toggleLeaderboard() {
       showLeaderboard = !showLeaderboard; updateUI();
-      await postToGAS({ action: 'setQuizControl', userCode: session.userCode, activeQIndex, showAnswer, showLeaderboard });
+      await postToGAS({
+        action: 'setQuizControl',
+        sessionKey: session.sessionKey || session.userCode,
+        activeQIndex, showAnswer, showLeaderboard
+      });
     }
 
     async function clearCurrentAnswers() {
       if (!confirm('ચાલુ પ્રશ્નના જવાબો ભૂંસી નાખવા છે?')) return;
       scannedResponses = {}; pendingSync = {}; allScannedNotified = false; updateUI();
-      await postToGAS({ action: 'setQuizControl', userCode: session.userCode, activeQIndex, showAnswer, showLeaderboard, clearResponses: true });
+      await postToGAS({
+        action: 'setQuizControl',
+        sessionKey: session.sessionKey || session.userCode,
+        activeQIndex, showAnswer, showLeaderboard, clearResponses: true
+      });
     }
 
     async function saveChapterScores() {
+      if (!confirm(`શું તમે ધોરણ ${currentStd} (${currentChTitle}) ના તમામ વિદ્યાર્થીઓના સ્કોર Google Sheet માં સેવ કરવા માંગો છો?`)) {
+        return;
+      }
       document.getElementById('statusText').innerText = 'સ્કોર સેવ થાય છે...';
-      const res = await postToGAS({ action: 'saveChapterScores', userCode: session.userCode });
+      const res = await postToGAS({
+        action: 'saveChapterScores',
+        sessionKey: session.sessionKey || session.userCode
+      });
       alert(res.data ? res.data.message : 'સેવ થઈ ગયું!');
       document.getElementById('statusText').innerText = 'સ્કોર સેવ થઈ ગયા ✓';
     }
 
     async function startCamera() {
-      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+      ensureAudio();
       try {
         videoEl = document.getElementById('video');
         overlayEl = document.getElementById('overlay');
@@ -306,7 +349,10 @@
         oCtx = overlayEl.getContext('2d');
         pCtx = pCanvasEl.getContext('2d');
 
-        if (typeof AR === 'undefined') { alert('ArUco લાઇબ્રેરી લોડ થઈ નથી. પેજ રિફ્રેશ કરો.'); return; }
+        if (typeof AR === 'undefined') {
+          alert('ArUco લાઇબ્રેરી લોડ થઈ નથી. પેજ રિફ્રેશ કરીને ફરી ટ્રાય કરો.');
+          return;
+        }
         detector = new AR.Detector();
 
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -322,30 +368,10 @@
       }
     }
 
-    // મોબાઈલ ઉભો છે કે આડો તે સેન્સરથી આપમેળે ઓળખવા માટે
-    let tiltOffset = 0;
-    window.addEventListener('devicemotion', (e) => {
-      const acc = e.accelerationIncludingGravity;
-      if (!acc || acc.x === null || acc.y === null) return;
-      const screenAngle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
-
-      // જો Auto-Rotate બંધ હોય (screenAngle === 0) અને ફોન આડો પકડ્યો હોય
-      if (screenAngle === 0) {
-        if (acc.x > 6 && Math.abs(acc.y) < 4) tiltOffset = -90;       // ફોન ડાબી બાજુ આડો
-        else if (acc.x < -6 && Math.abs(acc.y) < 4) tiltOffset = 90; // ફોન જમણી બાજુ આડો
-        else if (Math.abs(acc.x) < 4) tiltOffset = 0;                // ફોન સીધો ઉભો
-      } else {
-        // Auto-Rotate ચાલુ હોય ત્યારે બ્રાઉઝર જાતે જ ફ્રેમ સીધી કરી દે છે
-        tiltOffset = 0;
-      }
-    });
-
     function getAnswerFromCorners(corners) {
       const dx = corners[1].x - corners[0].x;
       const dy = corners[1].y - corners[0].y;
       let angle = (Math.atan2(dy, dx) * 180 / Math.PI) + tiltOffset;
-
-      // એંગલને -180 થી 180 ની રેન્જમાં રાખવો
       while (angle > 180) angle -= 360;
       while (angle < -180) angle += 360;
 
@@ -360,7 +386,8 @@
       if (videoEl && videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
         const scale = 640 / videoEl.videoWidth;
         const w = 640, h = Math.round(videoEl.videoHeight * scale);
-        pCanvasEl.width = w; pCanvasEl.height = h; overlayEl.width = w; overlayEl.height = h;
+        pCanvasEl.width = w; pCanvasEl.height = h;
+        overlayEl.width = w; overlayEl.height = h;
         pCtx.drawImage(videoEl, 0, 0, w, h);
         const markers = detector.detect(pCtx.getImageData(0, 0, w, h));
 
@@ -368,6 +395,7 @@
         markers.forEach(m => {
           if (m.id < 1 || m.id > 200) return;
           const ans = getAnswerFromCorners(m.corners);
+
           oCtx.strokeStyle = '#10b981'; oCtx.lineWidth = 4;
           oCtx.beginPath();
           m.corners.forEach((c, i) => i === 0 ? oCtx.moveTo(c.x, c.y) : oCtx.lineTo(c.x, c.y));
@@ -382,8 +410,8 @@
             pendingSync[m.id] = ans;
             renderScannedList();
 
-            // જો બધા વિદ્યાર્થીઓ સ્કેન થઈ ગયા હોય તો ખાસ કમ્પ્લીશન બીપ વગાડવો
-            if (totalStudents > 0 && Object.keys(scannedResponses).length >= totalStudents && !allScannedNotified) {
+            const scannedCount = Object.keys(scannedResponses).length;
+            if (totalStudents > 0 && scannedCount >= totalStudents && !allScannedNotified) {
               allScannedNotified = true;
               playAllScannedChime();
             } else {
@@ -402,7 +430,11 @@
       pendingSync = {};
       document.getElementById('statusText').innerText = 'સિંક થાય છે...';
       try {
-        await postToGAS({ action: 'updateResponses', userCode: session.userCode, responses: batch });
+        await postToGAS({
+          action: 'updateResponses',
+          sessionKey: session.sessionKey || session.userCode,
+          responses: batch
+        });
         document.getElementById('statusText').innerText = 'લાઇવ સિંક ✓';
       } catch (e) {
         document.getElementById('statusText').innerText = 'સિંક ફેલ!';
